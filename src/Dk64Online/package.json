@@ -1,0 +1,11 @@
+{
+  "name": "Dk64Online",
+  "version": "0.1.0",
+  "description": "",
+  "main": "Dk64Online.js",
+  "author": "SpiceyWolf, PMONickpop123",
+  "credits": "",
+  "license": "GPL3",
+  "core": "DonkeyKong64",
+  "updateUrl": "https://raw.githubusercontent.com/hylian-modding/Dk64Online/master/Package/update.json"
+}

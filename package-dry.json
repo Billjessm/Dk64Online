@@ -1,0 +1,13 @@
+{
+  "name": "Dk64Online",
+  "version": "0.1.0",
+  "description": "",
+  "main": "Dk64Online.js",
+  "author": "SpiceyWolf, PMONickpop123",
+  "credits": "Isotarge",
+  "license": "GPL3",
+  "core": "DonkeyKong64",
+  "dry": {
+    "extends": "./ModLoader64/package-dry.json"
+  }
+}
