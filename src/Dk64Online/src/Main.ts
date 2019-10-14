@@ -47,7 +47,7 @@ export class Dk64Online implements IPlugin {
       if (bufData[i] === bufStorage[i]) continue;
 
       bufData[i] |= bufStorage[i];
-      this.core.eeprom.set_slot(slotAddr, bufData[i]);
+      this.core.eeprom.set_slot(slotAddr + i, bufData[i]);
       needUpdate = true;
     }
 
@@ -158,6 +158,7 @@ export class Dk64Online implements IPlugin {
   
     for (i = 0; i < count; i++) {
       if (data[i] === packet.value[i]) continue;
+      
       data[i] |= packet.value[i];
       needUpdate = true;
     }
@@ -193,6 +194,7 @@ export class Dk64Online implements IPlugin {
 
     for (i = 0; i < count; i++) {
       if (data[i] === packet.value[i]) continue;
+
       data[i] |= packet.value[i];
       needUpdate = true;
     }
