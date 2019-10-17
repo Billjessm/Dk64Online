@@ -30,15 +30,126 @@ export class Dk64Online implements IPlugin {
   // Helpers
   /* None Yet! */
 
+  handle_player(bufData: Buffer, bufStorage: Buffer) {
+    // Initializers
+    let pData: Net.SyncBuffered;
+    let i: number;
+    let count = 0;
+    let needUpdate = false;
+
+    this.handle_kong(bufData, bufStorage, this.core.player.current_kong);
+      
+    
+    // bufData = this.core.player.get_kong_base();
+    // bufStorage = this.db.kong_data;
+    // count = bufData.byteLength;
+    // needUpdate = false;
+
+    // for (i = 0; i < count; i++) {
+    //   if (bufData[i] === bufStorage[i]) continue;
+
+    //   bufData[i] |= bufStorage[i];
+    //   this.core.player.set_kong_base(i, bufData[i]);
+    //   needUpdate = true;
+    // }
+
+    // if (needUpdate) {
+    //   this.db.kong_data = bufData;
+    //   pData = new Net.SyncBuffered(this.ModLoader.clientLobby, 'SyncKongData', bufData, false);
+    //   this.ModLoader.clientSide.sendPacket(pData);
+    // }
+
+  }
+
+  handle_kong(bufData: Buffer, bufStorage: Buffer, index: number) {
+    // Initializers
+    let kong = this.core.player.kong[index];
+    let dKong = this.db.kong[index] as Net.KongData;
+    let sKong = new Net.KongData();
+    let pData: Net.SyncKong;
+    let needUpdate = false;
+
+    sKong.colored_banana = kong.colored_bananas.array;
+    sKong.troff_scoff_banana = kong.colored_bananas.array;
+    sKong.golden_banana = kong.colored_bananas.array;
+    sKong.moves = kong.moves;
+    sKong.simian_slam = kong.simian_slam;
+    sKong.weapon = kong.weapon;
+    sKong.ammo_belt = kong.ammo_belt;
+    sKong.instrument = kong.instrument;
+    sKong.coins = kong.coins;
+    sKong.instrument_energy = kong.instrument_energy;
+    
+    // for (i = 0; i < 3; i++)
+    //   this.handle_bananas(bufData, bufStorage, index, i);
+    
+    // Sync Moves Bitfield
+    if (dKong.moves !== sKong.moves) {
+      dKong.moves |= sKong.moves;
+      this.core.player.kong[index].moves = dKong.moves;
+      needUpdate = true;
+    }
+
+    // Sync Simian Slam Upgrade
+    if (dKong.simian_slam > sKong.simian_slam) {
+      this.core.player.kong[index].simian_slam = dKong.simian_slam;
+    } else if (dKong.simian_slam < sKong.simian_slam) {
+      dKong.simian_slam = sKong.simian_slam;
+      needUpdate = true;
+    }
+
+    // Sync Weapon Bitfield
+    if (dKong.weapon !== sKong.weapon) {
+      dKong.weapon |= sKong.weapon;
+      this.core.player.kong[index].weapon = dKong.weapon;
+      needUpdate = true;
+    }
+
+    // Sync Bullets
+    // if (dKong.ammo_belt < sKong.ammo_belt) {
+    //   dKong.ammo_belt = sKong.ammo_belt;
+    //   this.core.player.kong[index].ammo_belt = dKong.ammo_belt;
+    //   needUpdate = true;
+    // }
+
+    // Sync Instruments Bitfield
+    if (dKong.instrument !== sKong.instrument) {
+      dKong.instrument |= sKong.instrument;
+      this.core.player.kong[index].instrument = dKong.instrument;
+      needUpdate = true;
+    }
+
+    // Sync coins count
+    // if (dKong.coins < sKong.coins) {
+    //   dKong.coins = sKong.coins;
+    //   this.core.player.kong[index].coins = dKong.coins;
+    //   needUpdate = true;
+    // }
+    
+    // Sync instrument energy count
+    // if (dKong.instrument_energy < sKong.instrument_energy) {
+    //   dKong.instrument_energy = sKong.instrument_energy;
+    //   this.core.player.kong[index].instrument_energy = dKong.instrument_energy;
+    //   needUpdate = true;
+    // }
+
+    if (!needUpdate) return;
+
+    this.db.kong[index] = dKong;
+
+    pData = new Net.SyncKong(this.ModLoader.clientLobby, dKong, index, false);
+    this.ModLoader.clientSide.sendPacket(pData);    
+  }
+
   handle_game_flags(bufData: Buffer, bufStorage: Buffer, profile: number) {
     // Initializers
     let pData: Net.SyncBuffered;
     let i: number;
     let count = 0;
-    let slotAddr = this.core.eeprom.get_slot_address(profile);
+    let slotAddr = this.core.save.get_slot_address(profile);
     let needUpdate = false;
 
-    bufData = this.core.eeprom.get_slot(slotAddr);
+    bufData = this.core.save.get_slot(slotAddr);
     bufStorage = this.db.game_flags;
     count = bufData.byteLength;
     needUpdate = false;
@@ -47,7 +158,7 @@ export class Dk64Online implements IPlugin {
       if (bufData[i] === bufStorage[i]) continue;
 
       bufData[i] |= bufStorage[i];
-      this.core.eeprom.set_slot(slotAddr + i, bufData[i]);
+      this.core.save.set_slot(slotAddr + i, bufData[i]);
       needUpdate = true;
     }
 
@@ -74,6 +185,10 @@ export class Dk64Online implements IPlugin {
     let bufStorage: Buffer;
     let bufData: Buffer;
 
+    // Player Handlers
+    this.handle_player(bufData!, bufStorage!);
+
+    // Flag Handlers
     this.handle_game_flags(bufData!, bufStorage!, profile);
   }
 
@@ -141,9 +256,77 @@ export class Dk64Online implements IPlugin {
     let sDB: Net.DatabaseServer = this.ModLoader.lobbyManager.getLobbyStorage(packet.lobby, this) as Net.DatabaseServer;
     let pData = new Net.SyncStorage(
       packet.lobby,
+      sDB.kong,
       sDB.game_flags
     );
     this.ModLoader.serverSide.sendPacketToSpecificPlayer(pData, packet.player);
+  }
+  
+  @ServerNetworkHandler('SyncKong')
+  onServer_SyncKongData(packet: Net.SyncKong) {
+    this.ModLoader.logger.info('[Server] Received: {Kong Data}');
+
+    // Initializers
+    let sDB: Net.DatabaseServer = this.ModLoader.lobbyManager.getLobbyStorage(packet.lobby, this) as Net.DatabaseServer;
+    let dKong = sDB.kong[packet.kong_index] as Net.KongData;
+    let sKong = packet.kong;
+    let pData: Net.SyncKong;
+    let needUpdate = false;
+    
+    // for (i = 0; i < 3; i++)
+    //   this.handle_bananas(bufData, bufStorage, index, i);
+    
+    // Sync Moves Bitfield
+    if (dKong.moves !== sKong.moves) {
+      dKong.moves |= sKong.moves;
+      needUpdate = true;
+    }
+
+    // Sync Simian Slam Upgrade
+    if (dKong.simian_slam < sKong.simian_slam) {
+      dKong.simian_slam = sKong.simian_slam;
+      needUpdate = true;
+    }
+
+    // Sync Weapon Bitfield
+    if (dKong.weapon !== sKong.weapon) {
+      dKong.weapon |= sKong.weapon;
+      needUpdate = true;
+    }
+
+    // Sync Bullets
+    // if (dKong.ammo_belt < sKong.ammo_belt) {
+    //   dKong.ammo_belt = sKong.ammo_belt;
+    //   this.core.player.kong[index].ammo_belt = dKong.ammo_belt;
+    //   needUpdate = true;
+    // }
+
+    // Sync Instruments Bitfield
+    if (dKong.instrument !== sKong.instrument) {
+      dKong.instrument |= sKong.instrument;
+      needUpdate = true;
+    }
+
+    // Sync coins count
+    // if (dKong.coins < sKong.coins) {
+    //   dKong.coins = sKong.coins;
+    //   needUpdate = true;
+    // }
+    
+    // Sync instrument energy count
+    // if (dKong.instrument_energy < sKong.instrument_energy) {
+    //   dKong.instrument_energy = sKong.instrument_energy;
+    //   needUpdate = true;
+    // }
+  
+    if (!needUpdate) return;
+
+    sDB.kong[packet.kong_index] = dKong;
+  
+    pData = new Net.SyncKong(packet.lobby, dKong, packet.kong_index, true);
+    this.ModLoader.serverSide.sendPacket(pData);
+
+    this.ModLoader.logger.info('[Server] Updated: {Kong Data}');
   }
     
   @ServerNetworkHandler('SyncGameFlags')
@@ -180,7 +363,70 @@ export class Dk64Online implements IPlugin {
   @NetworkHandler('SyncStorage')
   onClient_SyncStorage(packet: Net.SyncStorage): void {
     this.ModLoader.logger.info('[Client] Received: {Lobby Storage}');
+    this.db.kong = packet.kong;
     this.db.game_flags = packet.game_flags;
+  }
+  
+  @NetworkHandler('SyncKong')
+  onClient_SyncKongData(packet: Net.SyncKong) {
+    this.ModLoader.logger.info('[Client] Received: {Kong Data}');
+    
+    // Initializers
+    let dKong = this.db.kong[packet.kong_index] as Net.KongData;
+    let sKong = packet.kong;
+    let needUpdate = false;
+    
+    // for (i = 0; i < 3; i++)
+    //   this.handle_bananas(bufData, bufStorage, index, i);
+    
+    // Sync Moves Bitfield
+    if (dKong.moves !== sKong.moves) {
+      dKong.moves |= sKong.moves;
+      needUpdate = true;
+    }
+
+    // Sync Simian Slam Upgrade
+    if (dKong.simian_slam < sKong.simian_slam) {
+      dKong.simian_slam = sKong.simian_slam;
+      needUpdate = true;
+    }
+
+    // Sync Weapon Bitfield
+    if (dKong.weapon !== sKong.weapon) {
+      dKong.weapon |= sKong.weapon;
+      needUpdate = true;
+    }
+
+    // Sync Bullets
+    // if (dKong.ammo_belt < sKong.ammo_belt) {
+    //   dKong.ammo_belt = sKong.ammo_belt;
+    //   this.core.player.kong[index].ammo_belt = dKong.ammo_belt;
+    //   needUpdate = true;
+    // }
+
+    // Sync Instruments Bitfield
+    if (dKong.instrument !== sKong.instrument) {
+      dKong.instrument |= sKong.instrument;
+      needUpdate = true;
+    }
+
+    // Sync coins count
+    // if (dKong.coins < sKong.coins) {
+    //   dKong.coins = sKong.coins;
+    //   needUpdate = true;
+    // }
+    
+    // Sync instrument energy count
+    // if (dKong.instrument_energy < sKong.instrument_energy) {
+    //   dKong.instrument_energy = sKong.instrument_energy;
+    //   needUpdate = true;
+    // }
+
+    if (!needUpdate) return;
+    
+    this.db.kong[packet.kong_index] = dKong;
+
+    this.ModLoader.logger.info('[Client] Updated: {Kong Data}');
   }
 
   @NetworkHandler('SyncGameFlags')
