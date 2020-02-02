@@ -3,11 +3,9 @@
   "version": "0.1.3",
   "description": "",
   "main": "Dk64Online.js",
-  "author": "SpiceyWolf, PMONickpop123",
+  "author": "PMONickpop123, SpiceyWolf",
   "credits": "Isotarge",
   "license": "GPL3",
   "core": "DonkeyKong64",
-  "dry": {
-    "extends": "./ModLoader64/package-dry.json"
-  }
+  "updateUrl": "https://raw.githubusercontent.com/hylian-modding/Dk64Online/master/update.json"
 }
