@@ -15,7 +15,7 @@ import {
 } from 'modloader64_api/NetworkHandler';
 import { InjectCore } from 'modloader64_api/CoreInjection';
 import { Packet } from 'modloader64_api/ModLoaderDefaultImpls';
-import * as API from 'modloader64_api/DK64/Imports';
+import * as API from 'DonkeyKong64/API/Imports';
 import * as Net from './network/Imports';
 
 export class Dk64Online implements IPlugin {
