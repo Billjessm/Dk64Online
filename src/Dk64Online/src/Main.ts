@@ -3941,6 +3941,10 @@ export class Dk64Online implements IPlugin {
 	onServer_RequestStorage(packet: Packet): void {
 		this.ModLoader.logger.info('[Server] Sending: {Lobby Storage}');
 		let sDB: Net.DatabaseServer = this.ModLoader.lobbyManager.getLobbyStorage(packet.lobby, this) as Net.DatabaseServer;
+
+        // Safety check
+        if (sDB === null) return;
+
 		let pData = new Net.SyncStorage(packet.lobby, sDB.game_flags, sDB.kong);
 		this.ModLoader.serverSide.sendPacketToSpecificPlayer(pData, packet.player);
 	}
@@ -3950,6 +3954,10 @@ export class Dk64Online implements IPlugin {
 		this.ModLoader.logger.info('[Server] Received: {Game Flags}');
 
 		let sDB: Net.DatabaseServer = this.ModLoader.lobbyManager.getLobbyStorage(packet.lobby, this) as Net.DatabaseServer;
+
+        // Safety check
+        if (sDB === null) return;
+
 		let data: Buffer = sDB.game_flags;
 		let count: number = data.byteLength;
 		let i = 0;
@@ -3977,6 +3985,10 @@ export class Dk64Online implements IPlugin {
 		this.ModLoader.logger.info('[Server] Received: {Temp Flags}');
 
 		let sDB: Net.DatabaseServer = this.ModLoader.lobbyManager.getLobbyStorage(packet.lobby, this) as Net.DatabaseServer;
+
+        // Safety check
+        if (sDB === null) return;
+
 		let data: Buffer = sDB.temp_flags;
 		let count: number = data.byteLength;
 		let i = 0;
@@ -4003,6 +4015,10 @@ export class Dk64Online implements IPlugin {
 		this.ModLoader.logger.info('[Server] Received: {Kong Data}');
 
 		let sDB: Net.DatabaseServer = this.ModLoader.lobbyManager.getLobbyStorage(packet.lobby, this) as Net.DatabaseServer;
+
+        // Safety check
+        if (sDB === null) return;
+
 		let index: number = packet.kong_index;
 		let data = sDB.kong[index] as Net.KongData;
 		let needUpdate = false;
