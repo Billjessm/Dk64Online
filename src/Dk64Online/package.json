@@ -1,11 +1,14 @@
 {
   "name": "Dk64Online",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "",
   "main": "Dk64Online.js",
   "author": "PMONickpop123, SpiceyWolf",
   "credits": "Isotarge",
   "license": "GPL3",
   "core": "DonkeyKong64",
-  "updateUrl": "https://raw.githubusercontent.com/hylian-modding/Dk64Online/master/update.json"
+  "updateUrl": "https://raw.githubusercontent.com/hylian-modding/Dk64Online/master/update.json",
+  "modloader64_deps": {
+    "DonkeyKong64": "https://github.com/hylian-modding/Core-DonkeyKong64"
+  }
 }
