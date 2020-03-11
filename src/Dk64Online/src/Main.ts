@@ -4098,7 +4098,7 @@ export class Dk64Online implements IPlugin {
 
 		if (!needUpdate) return;
 		sDB.kong[index] = data;
-		let pData = new Net.SyncKong(this.ModLoader.clientLobby, sDB.kong[index], index, true);
+		let pData = new Net.SyncKong(packet.lobby, sDB.kong[index], index, true);
 		this.ModLoader.serverSide.sendPacket(pData);
 
 		this.ModLoader.logger.info('[Server] Updated: {Kong Data}');
