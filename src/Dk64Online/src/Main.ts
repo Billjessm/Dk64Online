@@ -270,7 +270,7 @@ export class Dk64Online implements IPlugin {
 
 			bufData[i] |= bufStorage[i];
 			this.core.save.set_slot(slotAddr + i, bufData[i]);
-			this.ModLoader.logger.info("bufData[" + i + "]: " + bufData[i] + ", bufStorage[" + i + "]: " + bufStorage[i]);
+			//this.ModLoader.logger.info("bufData[" + i + "]: " + bufData[i] + ", bufStorage[" + i + "]: " + bufStorage[i]);
 			needUpdate = true;
 		}
 
